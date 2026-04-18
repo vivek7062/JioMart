@@ -10,6 +10,7 @@ import com.example.jiomartclone.domain.model.groceries.GroceriesBanner
 import com.example.jiomartclone.domain.model.groceries.GroceriesCategory
 import com.example.jiomartclone.domain.model.lowprice.LowPriceCategoryWithProduct
 import com.example.jiomartclone.domain.model.lowprice.ProductCategory
+import com.example.jiomartclone.domain.model.offertab.OfferResponse
 import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
@@ -32,4 +33,6 @@ interface CategoryRepository {
     fun getElectronicsData() : Flow<Resource<List<Electronics>>>
 
     fun getCategoriesTabData() : Flow<Resource<CategoriesResponse>>
+
+    fun getOffersTabData() : Flow<Resource<OfferResponse>>
 }

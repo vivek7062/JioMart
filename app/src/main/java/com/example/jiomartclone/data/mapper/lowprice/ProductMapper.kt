@@ -6,6 +6,9 @@ import com.example.jiomartclone.domain.model.lowprice.Product
 fun ProductDto.toDomain(): Product{
     return Product(
         brand = brand,
+        category = category,
+        menuId = menuId,
+        subCategory = subCategory,
         description = description,
         foodType = foodType,
         isNew = isNew,

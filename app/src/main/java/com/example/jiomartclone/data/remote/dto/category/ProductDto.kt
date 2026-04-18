@@ -2,6 +2,9 @@ package com.example.jiomartclone.data.remote.dto.category
 
 data class ProductDto(
     val brand: String,
+    val menuId: String,
+    val category: String,
+    val subCategory : String,
     val description: String,
     val foodType: String,
     val isNew: Boolean,
