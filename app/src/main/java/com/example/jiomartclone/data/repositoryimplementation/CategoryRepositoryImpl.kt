@@ -7,6 +7,7 @@ import com.example.jiomartclone.core.dispatcher.DispatcherProvider
 import com.example.jiomartclone.data.mapper.electronics.toDomain
 import com.example.jiomartclone.data.mapper.groceries.toDomain
 import com.example.jiomartclone.data.mapper.lowprice.toDomain
+import com.example.jiomartclone.data.mapper.offertab.toDomain
 import com.example.jiomartclone.data.mapper.toDomain
 import com.example.jiomartclone.data.remote.api.CategoryService
 import com.example.jiomartclone.domain.model.Category
@@ -17,14 +18,9 @@ import com.example.jiomartclone.domain.model.groceries.GroceriesBanner
 import com.example.jiomartclone.domain.model.groceries.GroceriesCategory
 import com.example.jiomartclone.domain.model.lowprice.LowPriceCategoryWithProduct
 import com.example.jiomartclone.domain.model.lowprice.ProductCategory
+import com.example.jiomartclone.domain.model.offertab.OfferResponse
 import com.example.jiomartclone.domain.repositoryinterface.CategoryRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import okio.IOException
-import retrofit2.HttpException
 import toDomain
 import javax.inject.Inject
 
@@ -86,7 +82,15 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     override fun getCategoriesTabData(): Flow<Resource<CategoriesResponse>> {
-        return safeApiCall(apiCall = { categoryService.getCategoriesTabData() }, mapper = { it.toDomain() })
+        return safeApiCall(
+            apiCall = { categoryService.getCategoriesTabData() },
+            mapper = { it.toDomain() })
+    }
+
+    override fun getOffersTabData(): Flow<Resource<OfferResponse>> {
+        return safeApiCall(
+            apiCall = { categoryService.getOffersTabData() },
+            mapper = { it.toDomain() })
     }
 
 }

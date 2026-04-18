@@ -11,6 +11,7 @@ import com.example.jiomartclone.data.remote.dto.category.LowPriceCategoryWithPro
 import com.example.jiomartclone.data.remote.dto.category.ProductCategoryDto
 import com.example.jiomartclone.data.remote.dto.electronics.ElectronicsDto
 import com.example.jiomartclone.data.remote.dto.groceries.GroceriesCategoryDto
+import com.example.jiomartclone.data.remote.dto.offertab.OfferResponseDto
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
@@ -45,4 +46,7 @@ interface CategoryService {
 
     @GET("/v3/b/69ddbafcaaba882197f7d797?meta=false")
     suspend fun getCategoriesTabData(): CategoriesResponseDto
+
+    @GET("/v3/b/69e0ca4baaba882197063e3e?meta=false")
+    suspend fun getOffersTabData(): OfferResponseDto
 }

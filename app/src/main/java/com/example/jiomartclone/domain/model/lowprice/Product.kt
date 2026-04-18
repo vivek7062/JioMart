@@ -2,6 +2,9 @@ package com.example.jiomartclone.domain.model.lowprice
 
 data class Product(
     val brand: String,
+    val menuId: String?,
+    val category: String?,
+    val subCategory: String?,
     val description: String,
     val foodType: String,
     val isNew: Boolean,
