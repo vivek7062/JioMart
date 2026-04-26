@@ -37,6 +37,10 @@ materialIcons = "1.7.3"
 
 ksp = "2.0.21-1.0.25"
 
+shimmer = "1.2.0"
+hiltCommon = "1.2.0"
+hiltWork = "1.2.0"
+
 
 
 [libraries]
@@ -136,6 +140,11 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+
+# Shimmer
+compose-shimmer = { group = "com.valentinilk.shimmer", name = "compose-shimmer", version.ref = "shimmer" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
 
 
 

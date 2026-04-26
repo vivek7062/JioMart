@@ -7,21 +7,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Sell
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,7 +44,7 @@ fun HomeBottomBar(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 24.dp, top = 8.dp)
+            .padding(bottom = 24.dp)
     ) {
 
         Row(
@@ -86,11 +84,11 @@ fun HomeBottomBar(navController: NavHostController) {
             }
 
             BottomBarItem(
-                selected = currentRoute == Routes.Profile.route,
-                icon = Icons.Filled.Person,
-                label = "Account"
+                selected = currentRoute == Routes.Offers.route,
+                icon = Icons.Filled.LocalOffer,
+                label = "Offers"
             ) {
-                navController.navigate(Routes.Profile.route)
+                navController.navigate(Routes.Offers.route)
             }
         }
     }
@@ -113,8 +111,6 @@ fun BottomBarItem(
             .padding(start = 12.dp, end = 12.dp, bottom = 16.dp, top = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        // 🔥 Active background circle
         Box(
             modifier = Modifier
                 .size(32.dp)

@@ -87,6 +87,8 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.compiler)
 
     // Hilt Navigation Compose
@@ -102,6 +104,9 @@ dependencies {
 
     // Coil Image Loading
     implementation(libs.coil.compose)
+
+    // Shimmer
+    implementation(libs.compose.shimmer)
 
     // DataStore
     implementation(libs.androidx.datastore)

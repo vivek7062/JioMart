@@ -30,9 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,10 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.example.jiomartclone.presentation.components.ShowAppLoader
 import com.example.jiomartclone.presentation.components.ShowErrorScreen
+import com.example.jiomartclone.presentation.screen.home.ShimmerBox
 import kotlinx.coroutines.launch
 
 @Composable
@@ -64,53 +64,65 @@ fun CategoriesTabScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(true) {
         categoriesTabViewModel.onIntent(CategoriesIntent.LoadData)
     }
     Box(modifier = modifier.fillMaxSize()) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .weight(.18f)
-                    .fillMaxHeight()
-                    .padding(top = 8.dp)
-                    .background(Color.White)
-            ) {
-                state.categoriesUiState.data?.data?.leftMenu?.let {
-                    state.selectedMenu?.let { selected ->
-                        ShowLeftMenu(
-                            selectMenu = selected, menu = it
-                        ) { menu ->
-                            categoriesTabViewModel.selectMenu(menu)
-                            scope.launch {
-                                listState.scrollToItem(0)
+
+        when {
+            isLoading -> {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(.18f)) { LeftMenuShimmer() }
+                    Box(Modifier.weight(.82f)) { CategoryListShimmer() }
+                }
+            }
+
+            errorMessage != null -> {
+                ShowErrorScreen(message = errorMessage) {
+                    categoriesTabViewModel.onIntent(CategoriesIntent.Retry)
+                }
+            }
+
+            else -> {
+                Row(modifier = Modifier.fillMaxSize()) {
+
+                    Box(
+                        modifier = Modifier
+                            .weight(.18f)
+                            .fillMaxHeight()
+                            .padding(top = 8.dp)
+                    ) {
+                        state.categoriesUiState.data?.data?.leftMenu?.let {
+                            state.selectedMenu?.let { selected ->
+                                ShowLeftMenu(
+                                    selectMenu = selected,
+                                    menu = it
+                                ) { menu ->
+                                    categoriesTabViewModel.selectMenu(menu)
+                                    scope.launch { listState.scrollToItem(0) }
+                                }
                             }
                         }
                     }
+
+                    val selectedMenu = state.selectedMenu
+                    val categories =
+                        state.categoriesUiState.data?.data?.categories.orEmpty()
+
+                    val filtered = remember(categories, selectedMenu) {
+                        categories.filter { it.menuId == selectedMenu }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(.82f)
+                            .fillMaxHeight()
+                    ) {
+                        if (selectedMenu != null && filtered.isNotEmpty()) {
+                            CategoryList(listState, filtered)
+                        }
+                    }
                 }
-            }
-            val selectedMenu = state.selectedMenu
-            val categories = state.categoriesUiState.data?.data?.categories.orEmpty()
-
-            val filtered = categories.filter { it.menuId == selectedMenu }
-
-            Box(
-                modifier = Modifier
-                    .weight(.82f)
-                    .fillMaxHeight()
-            ) {
-                if (selectedMenu != null && filtered.isNotEmpty()) {
-                    CategoryList(listState, filtered)
-                }
-            }
-
-        }
-        if (isLoading) {
-            ShowAppLoader()
-        }
-        if (!isLoading && errorMessage != null) {
-            ShowErrorScreen(message = errorMessage) {
-                categoriesTabViewModel.onIntent(CategoriesIntent.Retry)
             }
         }
     }
@@ -123,13 +135,18 @@ fun ShowLeftMenu(
     modifier: Modifier = Modifier,
     onClick: (String) -> Unit,
 ) {
-    LazyColumn(modifier = modifier) {
-        items(items = menu) { menuItem ->
-            LeftMenuItem(selectMenu = selectMenu, menuItem = menuItem) {
-                onClick(it)
-            }
-        }
-    }
+   Box(modifier = modifier.fillMaxHeight().background(Color.White)) {
+       LazyColumn {
+           items(
+               items = menu,
+               key = { it.id }
+           ) { menuItem ->
+               LeftMenuItem(selectMenu = selectMenu, menuItem = menuItem) {
+                   onClick(it)
+               }
+           }
+       }
+   }
 }
 
 @Composable
@@ -139,6 +156,12 @@ fun LeftMenuItem(
     modifier: Modifier = Modifier,
     onClick: (String) -> Unit,
 ) {
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(menuItem.icon)
+            .crossfade(true)
+            .build()
+    )
     Column(
         modifier = modifier.clickable {
             onClick(menuItem.id)
@@ -166,18 +189,26 @@ fun LeftMenuItem(
                     .height(56.dp)
                     .padding(start = 4.dp)
                     .background(
-                        color = if (selectMenu == menuItem.id) MaterialTheme.colorScheme.background else Color(
-                            0xffffffff
-                        ), shape = RoundedCornerShape(topStart = 36.dp, bottomStart = 36.dp)
-                    ), contentAlignment = Alignment.Center
+                        color = if (selectMenu == menuItem.id)
+                            MaterialTheme.colorScheme.background
+                        else Color.White,
+                        shape = RoundedCornerShape(topStart = 36.dp, bottomStart = 36.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
+                if (painter.state is AsyncImagePainter.State.Loading) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(30.dp)
+                            .height(40.dp)
+                    )
+                }
                 Image(
-                    painter = rememberAsyncImagePainter(menuItem.icon),
+                    painter = painter,
                     contentDescription = null,
                     modifier = Modifier
                         .width(30.dp)
                         .height(40.dp)
-
                 )
             }
         }
@@ -202,42 +233,51 @@ fun CategoryList(
     modifier: Modifier = Modifier,
 ) {
     if (category.isEmpty()) return
+    val sections = remember(category) {
+        category.firstOrNull()?.sections.orEmpty()
+    }
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxHeight(),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        contentPadding = PaddingValues(bottom = 100.dp)
     ) {
-        category.first().sections.forEach { categoryItem ->
-            item(key = categoryItem.title) {
+        sections.forEach { categoryItem ->
+
+            item(key = "header_${categoryItem.title}") {
                 Text(
                     text = categoryItem.title,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 16.dp, top = 16.dp)
                 )
             }
 
-            items(items = categoryItem.items.chunked(4), key = { row -> row.first().id } ) { categoryList ->
+            val chunkedItems = categoryItem.items.chunked(4)
+
+            items(
+                items = chunkedItems,
+                key = { row -> row.joinToString("_") { it.id } }
+            ) { categoryList ->
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+
                     categoryList.forEach { item ->
                         Box(modifier = Modifier.weight(1f)) {
                             CategoryItemScreen(categoryItem = item)
                         }
                     }
+
                     repeat(4 - categoryList.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
-
         }
     }
 }
@@ -283,5 +323,80 @@ fun CategoryItemScreen(
             fontSize = 12.sp,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
+    }
+}
+
+@Composable
+fun LeftMenuShimmer() {
+    LazyColumn {
+        items(10) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .size(40.dp)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                ShimmerBox(
+                    modifier = Modifier
+                        .height(10.dp)
+                        .fillMaxWidth(0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryItemShimmer() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        ShimmerBox(
+            modifier = Modifier
+                .size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        ShimmerBox(
+            modifier = Modifier
+                .height(12.dp)
+                .fillMaxWidth(0.8f)
+        )
+    }
+}
+
+@Composable
+fun CategoryListShimmer() {
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = 100.dp)
+    ) {
+
+        repeat(5) {
+            item {
+                ShimmerBox(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .height(16.dp)
+                        .fillMaxWidth(0.4f)
+                )
+            }
+            items(3) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(4) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            CategoryItemShimmer()
+                        }
+                    }
+                }
+            }
+        }
     }
 }

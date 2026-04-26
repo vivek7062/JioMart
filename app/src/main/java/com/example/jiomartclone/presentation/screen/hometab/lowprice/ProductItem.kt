@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -29,14 +26,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -46,35 +47,50 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.jiomartclone.R
 import com.example.jiomartclone.domain.model.lowprice.Product
-
-
-@Composable
-fun ProductList(modifier: Modifier = Modifier, productList: List<Product>) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(productList) { product ->
-            ProductItem(product = product)
-        }
-    }
-}
+import com.example.jiomartclone.presentation.screen.home.ShimmerBox
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductItem(modifier: Modifier = Modifier, product: Product) {
-    val isWishList = rememberSaveable { mutableStateOf(product.isWishlist) }
-    val selectQuantity = rememberSaveable { mutableIntStateOf(0) }
+fun ProductItem(
+    modifier: Modifier = Modifier,
+    product: Product,
+    quantity: Int,
+    onAdd: () -> Unit,
+    onRemove: () -> Unit
+) {
+    var isWishList by remember(product.productId) {
+        mutableStateOf(product.isWishlist)
+    }
+    val context = LocalContext.current
 
+    val imageRequest = remember(product.productImageUrl) {
+        ImageRequest.Builder(context)
+            .data(product.productImageUrl)
+            .crossfade(true)
+            .build()
+    }
+
+    val painter = rememberAsyncImagePainter(model = imageRequest)
+    val finalPrice = remember(product.productPrice, product.productDiscount) {
+        ((product.productPrice * (100 - product.productDiscount)) / 100.0).toInt()
+    }
+    val isLoading by remember(painter) {
+        derivedStateOf { painter.state is AsyncImagePainter.State.Loading }
+    }
+    val qtyState = rememberUpdatedState(quantity)
+    val title = remember(product.productName, product.unit) {
+        "${product.productName} (${product.unit})"
+    }
     Card(
         shape = RoundedCornerShape(6.dp),
         elevation = CardDefaults.cardElevation(0.dp),
         colors = CardDefaults.cardColors(Color.White),
-        modifier = Modifier
+        modifier = modifier
             .width(130.dp)
             .height(254.dp),
     ) {
@@ -85,22 +101,29 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
                         .padding(4.dp)
                         .height(150.dp)
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(product.productImageUrl),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                    Box(
                         modifier = Modifier
                             .height(130.dp)
                             .fillMaxWidth()
                             .clip(
                                 RoundedCornerShape(
                                     topStart = 4.dp,
-                                    topEnd = 4.dp,
-                                    bottomStart = 0.dp,
-                                    bottomEnd = 0.dp
+                                    topEnd = 4.dp
                                 )
                             )
-                    )
+                    ) {
+                        if (isLoading) {
+                            ShimmerBox(
+                                modifier = Modifier.matchParentSize()
+                            )
+                        }
+                        Image(
+                            painter = painter,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.matchParentSize()
+                        )
+                    }
                     Text(
                         text = product.unit,
                         textAlign = TextAlign.Center,
@@ -133,16 +156,15 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
 
                 )
                 Icon(
-                    imageVector = if (isWishList.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    tint = if (isWishList.value) Color(0xFFCB0000) else Color.White,
+                    imageVector = if (isWishList) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    tint = if (isWishList) Color(0xFFCB0000) else Color.White,
                     contentDescription = null,
                     modifier = Modifier
                         .padding(12.dp)
                         .size(20.dp)
                         .clickable {
-                            isWishList.value = !isWishList.value
-                        }
-                )
+                            isWishList = !isWishList
+                        })
                 Box(
                     modifier = Modifier
                         .height(32.dp)
@@ -152,14 +174,14 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
                         .background(color = Color(0xFFE6F4FF))
                         .border(width = 1.dp, color = Color(0xFF0074B2), RoundedCornerShape(6.dp))
                 ) {
-                    AnimatedContent(targetState = selectQuantity.intValue) { qty ->
+                    AnimatedContent(targetState = qtyState.value, label = "cart_animation") { qty ->
                         if (qty == 0) {
                             Text(
-                                "+",
-                                modifier = Modifier
+                                "+", modifier = Modifier
                                     .padding(horizontal = 10.dp)
-                                    .clickable { selectQuantity.intValue = 1 },
-                                color = Color(0xFF0074B2)
+                                    .clickable {
+                                        onAdd()
+                                    }, color = Color(0xFF0074B2)
                             )
                         } else {
                             Row(
@@ -170,16 +192,14 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
                                     "−",
                                     fontSize = 18.sp,
                                     modifier = Modifier.clickable {
-                                        if (selectQuantity.intValue > 0) {
-                                            selectQuantity.intValue--
-                                        }
+                                        onRemove.takeIf { quantity > 0 }?.invoke()
                                     },
                                     color = Color(0xFF0074B2),
                                 )
                                 Text(qty.toString(), color = Color(0xFF000000))
                                 Text(
                                     "+",
-                                    modifier = Modifier.clickable { selectQuantity.intValue++ },
+                                    modifier = Modifier.clickable { onAdd() },
                                     color = Color(0xFF0074B2)
                                 )
                             }
@@ -189,7 +209,8 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${product.productName} (${product.unit})", fontWeight = FontWeight.Normal,
+                text = title,
+                fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.bodySmall.copy(
                     lineHeight = 14.sp,
                     platformStyle = PlatformTextStyle(includeFontPadding = false)
@@ -207,8 +228,7 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
                 color = Color(0xFF388E3C),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.titleSmall.copy(
-                    lineHeight = 7.sp,
-                    platformStyle = PlatformTextStyle(
+                    lineHeight = 7.sp, platformStyle = PlatformTextStyle(
                         includeFontPadding = false
                     )
                 ),
@@ -222,7 +242,7 @@ fun ProductItem(modifier: Modifier = Modifier, product: Product) {
                 modifier = Modifier.padding(horizontal = 8.dp)
             ) {
                 Text(
-                    text = "₹${((product.productPrice * (100 - product.productDiscount) / 100))}",
+                    text = "₹${finalPrice}",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp

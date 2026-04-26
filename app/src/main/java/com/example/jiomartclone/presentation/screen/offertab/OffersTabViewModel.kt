@@ -34,6 +34,12 @@ class OffersTabViewModel @Inject constructor(private val offersTabUseCase: Offer
         }
     }
 
+    fun selectMenu(menuId: String) {
+        _state.update {
+            it.copy(selectedMenuId = menuId)
+        }
+    }
+
     fun getOfferTabData() {
         job?.cancel()
         job = viewModelScope.launch {
@@ -74,51 +80,26 @@ class OffersTabViewModel @Inject constructor(private val offersTabUseCase: Offer
         getOfferTabData()
     }
 
-    fun toggleBrand(brand: String) {
-        _state.update { current ->
-            val updated = current.selectedBrands.toMutableSet()
-            if (updated.contains(brand)) updated.remove(brand)
-            else updated.add(brand)
-            current.copy(selectedBrands = updated)
+    fun toggleFilter(filterId: String, value : String){
+        _state.update { current->
+            val map = current.selectedFilters.toMutableMap()
+            val set = map[filterId]?.toMutableSet()?:mutableSetOf()
+            if(set.contains(value)) set.remove(value)
+            else set.add(value)
+            map[filterId] = set
+            current.copy(selectedFilters = map)
         }
     }
 
-    fun toggleCategory(category: String) {
-        _state.update { current ->
-            val updated = current.selectedCategories.toMutableSet()
-            if (updated.contains(category)) updated.remove(category)
-            else updated.add(category)
-            current.copy(selectedCategories = updated)
-        }
-    }
-
-    fun toggleSubCategory(subcategory: String) {
-        _state.update { current ->
-            val updated = current.selectedSubCategories.toMutableSet()
-            if (updated.contains(subcategory)) updated.remove(subcategory)
-            else updated.add(subcategory)
-            current.copy(selectedSubCategories = updated)
-        }
-    }
-
-    fun selectPrice(range: PriceOffer) {
-        _state.update { it.copy(selectedPriceRange = range) }
-    }
-
-    fun selectDiscount(range: DiscountOffer) {
-        _state.update { it.copy(selectedDiscountRange = range) }
-    }
-
-    fun clearFilters() {
+    fun applyFilters(filters: Map<String, Set<String>>) {
         _state.update {
-            it.copy(
-                selectedBrands = emptySet(),
-                selectedCategories = emptySet(),
-                selectedSubCategories = emptySet(),
-                selectedPriceRange = null,
-                selectedDiscountRange = null,
-                isFilterApplied = false
-            )
+            it.copy(selectedFilters = filters)
+        }
+    }
+
+    fun clearFilter() {
+        _state.update {
+            it.copy(selectedFilters = emptyMap())
         }
     }
 }

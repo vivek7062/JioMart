@@ -23,4 +23,5 @@ sealed class Routes(val route : String) {
     }
 
     object Categories : Routes("categories")
+    object Offers : Routes("offers")
 }

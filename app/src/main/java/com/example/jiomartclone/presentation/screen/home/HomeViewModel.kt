@@ -8,6 +8,7 @@ import com.example.jiomartclone.data.repositoryimplementation.CategoryRepository
 import com.example.jiomartclone.domain.usecase.home.GetCategoriesUseCase
 import com.example.jiomartclone.domain.usecase.home.GetCategoryHeaderUseCase
 import com.example.jiomartclone.domain.usecase.home.GetTweetsByCategoryUseCase
+import com.example.jiomartclone.presentation.screen.hometab.electronics.ElectronicsIntent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +22,19 @@ class HomeViewModel @Inject constructor(val homeHeaderUseCase: GetCategoryHeader
     val state: StateFlow<HomeUiState>
         get() = _state
 
-    init {
-        getCategory()
-    }
 
+    fun onIntent(intent: HomeIntent) {
+        when (intent) {
+            is HomeIntent.LoadData -> {
+                if (_state.value.homeUiState.data == null) {
+                    getCategory()
+                }
+            }
+            is HomeIntent.Retry -> {
+                getCategory()
+            }
+        }
+    }
     fun getCategory() {
         viewModelScope.launch {
             homeHeaderUseCase().collect { result ->

@@ -1,6 +1,5 @@
 package com.example.jiomartclone.presentation.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +15,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -24,9 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.example.jiomartclone.domain.model.HomeLowPriceBanner
+import com.example.jiomartclone.presentation.screen.home.ShimmerBox
 import kotlinx.coroutines.delay
 
 @Composable
@@ -40,13 +41,35 @@ fun HomeImageBanner(modifier: Modifier = Modifier, banners: List<HomeLowPriceBan
                 .fillMaxWidth()
                 .height(160.dp)
         ) { page ->
-            Image(
-                painter = rememberAsyncImagePainter(banners[page].url),
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(banners[page].url)
+                    .crossfade(true)
+                    .build(),
+
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp)),
+
+                loading = {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                },
+
+                error = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.LightGray)
+                    )
+                }
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -68,7 +91,7 @@ fun HomeImageBanner(modifier: Modifier = Modifier, banners: List<HomeLowPriceBan
         }
         LaunchedEffect(key1 = Unit) {
             while (true) {
-                delay(8000)
+                delay(3000)
                 val nextPage = (pagerState.currentPage + 1) % banners.size
                 pagerState.animateScrollToPage(nextPage)
             }

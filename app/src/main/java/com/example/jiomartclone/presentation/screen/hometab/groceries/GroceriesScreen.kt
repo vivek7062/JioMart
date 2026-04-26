@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,11 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.jiomartclone.domain.model.groceries.GroceriesBanner
 import com.example.jiomartclone.domain.model.groceries.GroceriesCategoryItem
-import com.example.jiomartclone.presentation.components.ShowAppLoader
 import com.example.jiomartclone.presentation.components.ShowErrorScreen
+import com.example.jiomartclone.presentation.screen.home.ShimmerBox
 import com.example.jiomartclone.presentation.screen.hometab.groceries.GroceriesCategoryViewModel
 import com.example.jiomartclone.presentation.screen.hometab.groceries.GroceriesIntent
 import kotlin.collections.chunked
@@ -105,7 +108,7 @@ fun GroceriesScreen(
             }
         }
         if(isLoading){
-            ShowAppLoader()
+            GroceriesListShimmer()
         }
 
         if(!isLoading && errorMessage!=null){
@@ -121,6 +124,13 @@ fun GroceriesCategoryItemScreen(
     modifier: Modifier = Modifier,
     groceriesCategoryItem: GroceriesCategoryItem,
 ) {
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(groceriesCategoryItem.image)
+            .crossfade(true)
+            .build()
+    )
+
     Column(
         modifier = modifier.width(80.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -134,8 +144,14 @@ fun GroceriesCategoryItemScreen(
                 .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                 .padding(8.dp)
         ) {
+            if (painter.state is AsyncImagePainter.State.Loading) {
+                ShimmerBox(
+                    modifier = Modifier.matchParentSize()
+                )
+            }
+
             Image(
-                painter = rememberAsyncImagePainter(groceriesCategoryItem.image),
+                painter = painter,
                 contentDescription = groceriesCategoryItem.id,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -192,6 +208,81 @@ fun GroceriesBannerItem(modifier: Modifier = Modifier, banner: GroceriesBanner) 
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
         )
+    }
+}
+
+@Composable
+fun GroceriesBannerShimmer() {
+    LazyRow(
+        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
+        items(4) {
+            ShimmerBox(
+                modifier = Modifier
+                    .width(110.dp)
+                    .height(180.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun GroceriesItemShimmer() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        ShimmerBox(
+            modifier = Modifier
+                .size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        ShimmerBox(
+            modifier = Modifier
+                .height(12.dp)
+                .fillMaxWidth(0.8f)
+        )
+    }
+}
+
+@Composable
+fun GroceriesListShimmer() {
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = 120.dp)
+    ) {
+
+        item {
+            GroceriesBannerShimmer()
+        }
+
+        repeat(5) {
+
+            item {
+                ShimmerBox(
+                    modifier = Modifier
+                        .padding(start = 16.dp, top = 16.dp)
+                        .height(16.dp)
+                        .fillMaxWidth(0.4f)
+                )
+            }
+
+            items(3) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(4) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            GroceriesItemShimmer()
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

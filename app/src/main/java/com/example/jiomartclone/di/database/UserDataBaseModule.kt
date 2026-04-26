@@ -34,7 +34,7 @@ class UserDataBaseModule {
             context,
             UserDatabase::class.java,
             "UserDatabase"
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2).fallbackToDestructiveMigration().build()
     }
 
     @Provides

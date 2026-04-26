@@ -17,6 +17,7 @@ import com.example.jiomartclone.presentation.screen.auth.SignupScreen
 import com.example.jiomartclone.presentation.screen.categoriestab.CategoriesTabScreen
 import com.example.jiomartclone.presentation.screen.category.CategoryScreen
 import com.example.jiomartclone.presentation.screen.home.HomeScreen
+import com.example.jiomartclone.presentation.screen.offertab.OffersTabScreen
 import com.example.jiomartclone.presentation.screen.search.SearchScreen
 import com.example.jiomartclone.presentation.screen.splash.SplashScreen
 import com.example.jiomartclone.presentation.screen.tweetlist.TweetListByCategory
@@ -65,6 +66,10 @@ fun AppNavGraph(navController: NavHostController, currentHeaderColor: MutableSta
 
         composable(Routes.Categories.route) {
             CategoriesTabScreen()
+        }
+
+        composable(Routes.Offers.route) {
+            OffersTabScreen()
         }
     }
 }
